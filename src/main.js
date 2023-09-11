@@ -3,6 +3,8 @@ import Vue from "vue";
 // 引入App
 import App from "./App.vue";
 
+import router from "./router/index.js"; // 引入路由
+
 // 完整引入
 // 引入ElementUI组件库
 import ElementUI from "element-ui";
@@ -25,4 +27,5 @@ Vue.use(ElementUI);
 new Vue({
     el: "#app",
     render: (h) => h(App),
+    router: router, // 注册路由
 });

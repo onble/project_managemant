@@ -1,18 +1,14 @@
 <template>
     <div>
-        <el-container>
-            <el-header><SearchBar></SearchBar></el-header>
-            <el-main><ItemList></ItemList></el-main>
-        </el-container>
+        <ContentPage></ContentPage>
     </div>
 </template>
 
 <script>
-import SearchBar from "./components/SearchBar.vue";
-import ItemList from "./components/ItemList.vue";
+import ContentPage from "./components/ContentPage.vue";
 export default {
     name: "App",
-    components: { SearchBar, ItemList },
+    components: { ContentPage },
 };
 </script>
 

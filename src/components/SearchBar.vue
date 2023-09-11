@@ -3,7 +3,7 @@
         <el-row :gutter="10">
             <el-col :span="4">
                 <div class="grid-content">
-                    <el-input v-model="input" placeholder="请输入内容">
+                    <el-input v-model="input" placeholder="项目名称">
                     </el-input>
                 </div>
             </el-col>
