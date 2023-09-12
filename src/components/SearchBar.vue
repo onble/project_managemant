@@ -12,7 +12,7 @@
                     <el-button type="primary" @click="AddFormVisible = true"
                         >新增</el-button
                     >
-                    <el-button type="primary">查询</el-button>
+                    <el-button type="primary" @click="onSearch">查询</el-button>
                 </div>
             </el-col>
         </el-row>
@@ -185,6 +185,9 @@ export default {
                 return date.getTime() <= this.form.trueStart.getTime();
             }
             return false; // 如果没有选择开始日期，不禁用任何日期
+        },
+        onSearch() {
+            this.$emit("search", this.input);
         },
     },
 };

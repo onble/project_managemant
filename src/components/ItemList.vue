@@ -1,18 +1,15 @@
 <template>
     <div class="block">
         <el-table
+            v-loading="loading"
             :data="tableData"
             style="width: 100%"
             border
             @row-click="handleRowClick"
             row-key="serial"
         >
-            <el-table-column
-                prop="serial"
-                label="序号"
-                min-width="30"
-                align="center"
-            >
+            <el-table-column label="序号" min-width="30" align="center">
+                <template slot-scope="scope"> {{ scope.$index + 1 }} </template>
             </el-table-column>
             <el-table-column
                 prop="name"
@@ -58,7 +55,7 @@
                 align="center"
             >
             </el-table-column>
-            <el-table-column label="操作" align="right">
+            <el-table-column label="操作" align="center">
                 <template slot-scope="scope">
                     <el-button type="primary" @click="openEditForm"
                         >编辑</el-button
@@ -78,7 +75,7 @@
             @current-change="handleCurrentChange"
             :current-page.sync="currentPage"
             :page-sizes="[5, 10, 20, 50]"
-            :page-size="5"
+            :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             :total="totalInfo"
             align="right"
@@ -172,9 +169,29 @@ function toLocalDateString(date) {
     return localDate.toISOString().split("T")[0];
 }
 export default {
+    props: {
+        searchValue: {
+            type: String,
+            default: "",
+        },
+    },
+    watch: {
+        searchValue(newVal) {
+            // 当 searchValue 改变时，执行 API 请求
+            // console.log(
+            //     "this.currentPage, this.pageSize, newVal",
+            //     this.currentPage,
+            //     this.pageSize,
+            //     newVal
+            // );
+            this.fetchProjects(this.currentPage, this.pageSize, newVal);
+        },
+    },
     data() {
         return {
             currentPage: 1,
+            pageSize: 5, // 页面大小
+            loading: true,
             // tableData: [
             //     {
             //         serial: "1",
@@ -306,7 +323,6 @@ export default {
                         message: `删除成功!`,
                     });
                 })
-
                 .catch(() => {
                     this.$message({
                         type: "info",
@@ -354,13 +370,17 @@ export default {
             }
             this.ChangeFormVisible = false;
         },
-        handleSizeChange() {
+        handleSizeChange(pageSize) {
             // 一页数据大小改变
+            // console.log("pageSize", pageSize);
+            this.pageSize = pageSize;
+            this.fetchProjects(this.currentPage, pageSize);
         },
         handleCurrentChange(new_page) {
             // 具体页数改变
             // console.log("具体页数改变", new_page, this.currentPage);
             this.currentPage = new_page;
+            this.fetchProjects(new_page);
         },
         truncateText(text, maxLength) {
             if (text.length <= maxLength) {
@@ -375,6 +395,7 @@ export default {
             const apiUrl =
                 "http://121.40.126.131:80/luoshi-pms/api/pms//project/editing/queryProjectPage";
 
+            this.loading = true;
             this.$axios
                 .post(apiUrl, {
                     name: name,
@@ -382,16 +403,21 @@ export default {
                     pageSize: pageSize,
                 })
                 .then((response) => {
-                    console.log(response.data);
-                    console.log(response.data.body.content);
+                    // console.log(response.data);
+                    // console.log(response.data.body.content);
                     //projects = response.data; // 假设 API 返回的数据是一个数组，你可能需要根据实际的数据结构进行调整
-                    this.tableData = this.mapDataArray(
-                        response.data.body.content
-                    );
-                    this.totalInfo = response.data.body.total || 0;
+                    if (response.data.body) {
+                        this.tableData = this.mapDataArray(
+                            response.data.body.content
+                        );
+                        this.totalInfo = response.data.body.total || 0;
+                    }
                 })
                 .catch((error) => {
                     console.error("Error fetching projects:", error);
+                })
+                .finally(() => {
+                    this.loading = false;
                 });
         },
         mapDataArray(apiDataArray) {
