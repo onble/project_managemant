@@ -5,6 +5,8 @@ import App from "./App.vue";
 
 import router from "./router/index.js"; // 引入路由
 
+import axios from "axios";
+
 // 完整引入
 // 引入ElementUI组件库
 import ElementUI from "element-ui";
@@ -13,6 +15,8 @@ import "element-ui/lib/theme-chalk/index.css";
 
 // 按需引入
 //import { Button, Row, DatePicker } from "element-ui";
+
+Vue.prototype.$axios = axios;
 
 // 关闭Vue的生产提示
 Vue.config.productionTip = false;

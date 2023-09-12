@@ -1,9 +1,9 @@
 <template>
-    <div>
+    <div id="root">
         <el-row :gutter="10">
             <el-col :span="4">
                 <div class="grid-content">
-                    <el-input v-model="input" placeholder="项目名称">
+                    <el-input v-model="input" placeholder="项目名称" clearable>
                     </el-input>
                 </div>
             </el-col>
@@ -19,10 +19,22 @@
 
         <el-dialog title="新增项目" :visible.sync="AddFormVisible">
             <el-form :model="form" :rules="rules">
-                <el-form-item label="项目名称" :label-width="formLabelWidth">
-                    <el-input v-model="form.name" autocomplete="off"></el-input>
+                <el-form-item
+                    label="项目名称"
+                    :label-width="formLabelWidth"
+                    prop="name"
+                >
+                    <el-input
+                        v-model="form.name"
+                        autocomplete="off"
+                        prop="planStart"
+                    ></el-input>
                 </el-form-item>
-                <el-form-item label="项目负责人" :label-width="formLabelWidth">
+                <el-form-item
+                    label="项目负责人"
+                    :label-width="formLabelWidth"
+                    prop="principal"
+                >
                     <el-select
                         v-model="form.principal"
                         placeholder="项目负责人"
@@ -40,6 +52,7 @@
                         v-model="form.planStart"
                         type="date"
                         placeholder="选择日期"
+                        :disabled-date="disablePlanStartDate"
                     >
                     </el-date-picker>
                 </el-form-item>
@@ -52,6 +65,7 @@
                         v-model="form.planEnd"
                         type="date"
                         placeholder="选择日期"
+                        :disabled-date="disablePlanEndDate"
                     >
                     </el-date-picker>
                 </el-form-item>
@@ -59,12 +73,19 @@
                     label="实际开始时间"
                     :label-width="formLabelWidth"
                 >
-                    <el-date-picker
-                        v-model="form.trueStart"
-                        type="date"
-                        placeholder="选择日期"
+                    <el-tooltip
+                        content="若填写则项目不可删除"
+                        placement="top"
+                        effect="dark"
                     >
-                    </el-date-picker>
+                        <el-date-picker
+                            v-model="form.trueStart"
+                            type="date"
+                            placeholder="选择日期"
+                            :disabled-date="disableTrueStartDate"
+                        >
+                        </el-date-picker
+                    ></el-tooltip>
                 </el-form-item>
                 <el-form-item
                     label="实际结束时间"
@@ -74,6 +95,7 @@
                         v-model="form.trueEnd"
                         type="date"
                         placeholder="选择日期"
+                        :disabled-date="disableTrueEndDate"
                     >
                     </el-date-picker>
                 </el-form-item>
@@ -98,13 +120,28 @@ export default {
                 serial: "",
                 name: "",
                 principal: "",
-                planStart: "",
-                planEnd: "",
-                trueStart: "",
+                planStart: new Date(),
+                planEnd: new Date(),
+                trueStart: new Date(),
+                // planStart: null,
+                // planEnd: null,
+                // trueStart: null,
                 trueEnd: "",
             },
             formLabelWidth: "120px",
             rules: {
+                name: [
+                    {
+                        required: true,
+                        message: "请输入项目名称",
+                        trigger: "blur",
+                    },
+                ],
+                principal: [
+                    {
+                        required: true,
+                    },
+                ],
                 planStart: [
                     {
                         type: "date",
@@ -124,11 +161,40 @@ export default {
             },
         };
     },
+    methods: {
+        disablePlanStartDate(date) {
+            if (this.form.planEnd) {
+                return date.getTime() >= this.form.planEnd.getTime();
+            }
+            return false; // 如果没有选择结束日期，不禁用任何日期
+        },
+        disablePlanEndDate(date) {
+            if (this.form.planStart) {
+                return date.getTime() <= this.form.planStart.getTime();
+            }
+            return false; // 如果没有选择开始日期，不禁用任何日期
+        },
+        disableTrueStartDate(date) {
+            if (this.form.trueEnd) {
+                return date.getTime() >= this.form.trueEnd.getTime();
+            }
+            return false; // 如果没有选择结束日期，不禁用任何日期
+        },
+        disableTrueEndDate(date) {
+            if (this.form.trueStart) {
+                return date.getTime() <= this.form.trueStart.getTime();
+            }
+            return false; // 如果没有选择开始日期，不禁用任何日期
+        },
+    },
 };
 </script>
 
-<style>
+<style scoped>
 .margin-left10 {
     margin-left: 10px;
+}
+#root {
+    margin: 10px 0;
 }
 </style>

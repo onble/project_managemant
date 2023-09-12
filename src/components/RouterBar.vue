@@ -13,7 +13,7 @@
                 index="/ProjectManage"
                 @click="$router.push('/ProjectManage')"
             >
-                处理中心
+                项目管理
             </el-menu-item>
             <el-submenu index="2">
                 <template slot="title">我的工作台</template>
@@ -38,14 +38,17 @@
 
 <script>
 export default {
-    created() {
-        this.activeIndex = this.$route.path;
-    },
     data() {
         return {
-            activeIndex: "1",
+            activeIndex: "/Home",
             activeIndex2: "1",
         };
+    },
+    created() {
+        if (this.$route.path == "/") {
+            this.$router.push("/Home");
+        }
+        this.activeIndex = this.$route.path;
     },
     methods: {
         handleSelect(key, keyPath) {

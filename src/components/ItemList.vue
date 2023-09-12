@@ -5,48 +5,103 @@
             style="width: 100%"
             border
             @row-click="handleRowClick"
+            row-key="serial"
         >
-            <el-table-column prop="serial" label="序号" width="60">
+            <el-table-column
+                prop="serial"
+                label="序号"
+                min-width="30"
+                align="center"
+            >
             </el-table-column>
-            <el-table-column prop="name" label="项目名称" width="120">
+            <el-table-column
+                prop="name"
+                label="项目名称"
+                min-width="120"
+                align="center"
+                v-slot:default="scope"
+            >
+                <span>{{ truncateText(scope.row.name, 100) }}</span>
             </el-table-column>
-            <el-table-column prop="principal" label="项目负责人" width="120">
+            <el-table-column
+                prop="principal"
+                label="项目负责人"
+                width="120"
+                align="center"
+            >
             </el-table-column>
-            <el-table-column prop="planStart" label="计划开始时间" width="120">
+            <el-table-column
+                prop="planStart"
+                label="计划开始时间"
+                width="120"
+                align="center"
+            >
             </el-table-column>
-            <el-table-column prop="planEnd" label="计划结束时间" width="120">
+            <el-table-column
+                prop="planEnd"
+                label="计划结束时间"
+                width="120"
+                align="center"
+            >
             </el-table-column>
-            <el-table-column prop="trueStart" label="实际开始时间" width="120">
+            <el-table-column
+                prop="trueStart"
+                label="实际开始时间"
+                width="120"
+                align="center"
+            >
             </el-table-column>
-            <el-table-column prop="trueEnd" label="实际结束时间" width="120">
+            <el-table-column
+                prop="trueEnd"
+                label="实际结束时间"
+                width="120"
+                align="center"
+            >
             </el-table-column>
-            <el-table-column label="操作">
-                <el-button type="primary" @click="openEditForm">编辑</el-button>
-
-                <el-button type="primary">添加人员</el-button>
-                <el-button type="danger" @click="deleteItem">删除</el-button>
-            </el-table-column>
+            <el-table-column label="操作" align="right">
+                <template slot-scope="scope">
+                    <el-button type="primary" @click="openEditForm"
+                        >编辑</el-button
+                    >
+                    <el-button type="primary">添加人员</el-button>
+                    <el-button
+                        type="danger"
+                        @click="deleteItem(scope.row)"
+                        :disabled="shouldDisableDelete(scope.row.trueStart)"
+                        >删除</el-button
+                    >
+                </template></el-table-column
+            >
         </el-table>
         <el-pagination
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            :current-page="currentPage"
-            :page-sizes="[5, 10, 20]"
-            :page-size="100"
+            :current-page.sync="currentPage"
+            :page-sizes="[5, 10, 20, 50]"
+            :page-size="5"
             layout="total, sizes, prev, pager, next, jumper"
-            :total="2"
+            :total="totalInfo"
+            align="right"
         >
         </el-pagination>
 
         <el-dialog title="编辑项目" :visible.sync="ChangeFormVisible">
             <el-form :model="currentRow" :rules="rules">
-                <el-form-item label="项目名称" :label-width="formLabelWidth">
+                <el-form-item
+                    label="项目名称"
+                    :label-width="formLabelWidth"
+                    prop="name"
+                >
                     <el-input
                         v-model="currentRow.name"
                         autocomplete="off"
                     ></el-input>
                 </el-form-item>
-                <el-form-item label="项目负责人" :label-width="formLabelWidth">
+                <el-form-item
+                    label="项目负责人"
+                    :label-width="formLabelWidth"
+                    prop="principal"
+                >
                     <el-select
                         v-model="currentRow.principal"
                         placeholder="项目负责人"
@@ -119,27 +174,47 @@ function toLocalDateString(date) {
 export default {
     data() {
         return {
-            currentPage: 0,
-            tableData: [
-                {
-                    serial: "1",
-                    name: "测试",
-                    principal: "张三",
-                    planStart: "2023-09-02",
-                    planEnd: "2023-09-02",
-                    trueStart: "2023-09-03",
-                    trueEnd: "2023-09-04",
-                },
-                {
-                    serial: "2",
-                    name: "测试1",
-                    principal: "张三",
-                    planStart: "2023-09-02",
-                    planEnd: "2023-09-02",
-                    trueStart: "2023-09-03",
-                    trueEnd: "2023-09-04",
-                },
-            ],
+            currentPage: 1,
+            // tableData: [
+            //     {
+            //         serial: "1",
+            //         name: "测试",
+            //         principal: "张三",
+            //         planStart: "2023-09-02",
+            //         planEnd: "2023-09-02",
+            //         trueStart: "2023-09-03",
+            //         trueEnd: "2023-09-04",
+            //     },
+            //     {
+            //         serial: "2",
+            //         name: "测试1",
+            //         principal: "张三",
+            //         planStart: "2023-09-02",
+            //         planEnd: "2023-09-02",
+            //         trueStart: "2023-09-03",
+            //         trueEnd: "2023-09-04",
+            //     },
+            //     {
+            //         serial: "3",
+            //         name: "前端vue",
+            //         principal: "李昊波",
+            //         planStart: "2023-09-02",
+            //         planEnd: "2023-09-02",
+            //         trueStart: "2023-11-03",
+            //         trueEnd: "2023-11-04",
+            //     },
+            //     {
+            //         serial: "4",
+            //         name: "springboot",
+            //         principal: "李昊波",
+            //         planStart: "2023-09-02",
+            //         planEnd: "2023-09-02",
+            //         trueStart: "2023-11-13",
+            //         trueEnd: "2023-11-14",
+            //     },
+            // ],
+            tableData: [],
+            totalInfo: 0, // 总共的信息条数
             ChangeFormVisible: false,
             currentRow: {
                 serial: "",
@@ -161,6 +236,18 @@ export default {
             },
             formLabelWidth: "120px",
             rules: {
+                name: [
+                    {
+                        required: true,
+                        message: "请输入项目名称",
+                        trigger: "blur",
+                    },
+                ],
+                principal: [
+                    {
+                        required: true,
+                    },
+                ],
                 planStart: [
                     {
                         type: "date",
@@ -180,13 +267,23 @@ export default {
             },
         };
     },
+    created() {
+        // 当组件创建后，立即获取数据
+        this.fetchProjects();
+    },
     methods: {
-        deleteItem() {
-            this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
-                confirmButtonText: "确定",
-                cancelButtonText: "取消",
-                type: "warning",
-            })
+        deleteItem(row) {
+            this.currentRow = row;
+
+            this.$confirm(
+                `此操作将永久删除《${this.currentRow.name}》, 是否继续?`,
+                "提示",
+                {
+                    confirmButtonText: "确定",
+                    cancelButtonText: "取消",
+                    type: "warning",
+                }
+            )
                 .then(() => {
                     // 执行删除操作，比如从 tableData 中删除一个元素
                     let index = -1;
@@ -206,7 +303,7 @@ export default {
 
                     this.$message({
                         type: "success",
-                        message: "删除成功!",
+                        message: `删除成功!`,
                     });
                 })
 
@@ -257,8 +354,65 @@ export default {
             }
             this.ChangeFormVisible = false;
         },
-        handleSizeChange() {},
-        handleCurrentChange() {},
+        handleSizeChange() {
+            // 一页数据大小改变
+        },
+        handleCurrentChange(new_page) {
+            // 具体页数改变
+            // console.log("具体页数改变", new_page, this.currentPage);
+            this.currentPage = new_page;
+        },
+        truncateText(text, maxLength) {
+            if (text.length <= maxLength) {
+                return text;
+            }
+            return text.substring(0, maxLength) + "...";
+        },
+        shouldDisableDelete(trueStartDate) {
+            return new Date() > new Date(trueStartDate);
+        },
+        fetchProjects(pageNum = 1, pageSize = 5, name = "") {
+            const apiUrl =
+                "http://121.40.126.131:80/luoshi-pms/api/pms//project/editing/queryProjectPage";
+
+            this.$axios
+                .post(apiUrl, {
+                    name: name,
+                    pageNum: pageNum,
+                    pageSize: pageSize,
+                })
+                .then((response) => {
+                    console.log(response.data);
+                    console.log(response.data.body.content);
+                    //projects = response.data; // 假设 API 返回的数据是一个数组，你可能需要根据实际的数据结构进行调整
+                    this.tableData = this.mapDataArray(
+                        response.data.body.content
+                    );
+                    this.totalInfo = response.data.body.total || 0;
+                })
+                .catch((error) => {
+                    console.error("Error fetching projects:", error);
+                });
+        },
+        mapDataArray(apiDataArray) {
+            return apiDataArray.map((apiData) => ({
+                serial: apiData.id || "",
+                name: apiData.name || "",
+                principal: apiData.employeeName || "",
+                planStart: apiData.planStartDate
+                    ? apiData.planStartDate.split(" ")[0]
+                    : "", // 取日期部分
+                planEnd: apiData.planEndDate
+                    ? apiData.planEndDate.split(" ")[0]
+                    : "", // 取日期部分
+                trueStart: apiData.realityStartDate
+                    ? apiData.realityStartDate.split(" ")[0]
+                    : "", // 取日期部分
+                trueEnd: apiData.realityEndDate
+                    ? apiData.realityEndDate.split(" ")[0]
+                    : "", // 取日期部分
+            }));
+        },
     },
 };
 </script>
