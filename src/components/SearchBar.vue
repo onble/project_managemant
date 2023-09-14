@@ -28,6 +28,8 @@
                         v-model="form.name"
                         autocomplete="off"
                         prop="planStart"
+                        maxlength="100"
+                        show-word-limit
                     ></el-input>
                 </el-form-item>
                 <el-form-item
@@ -39,8 +41,12 @@
                         v-model="form.principal"
                         placeholder="项目负责人"
                     >
-                        <el-option label="张三" value="shanghai"></el-option>
-                        <el-option label="李四" value="beijing"></el-option>
+                        <el-option
+                            v-for="employee in employees"
+                            :key="employee.id"
+                            :label="employee.name"
+                            :value="employee.id"
+                        ></el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item
@@ -86,6 +92,9 @@
                         >
                         </el-date-picker
                     ></el-tooltip>
+                    <div style="color: red; line-height: initial">
+                        *若填写则项目不可删除
+                    </div>
                 </el-form-item>
                 <el-form-item
                     label="实际结束时间"
@@ -102,7 +111,7 @@
             </el-form>
             <div slot="footer" class="dialog-footer">
                 <el-button @click="AddFormVisible = false">取 消</el-button>
-                <el-button type="primary" @click="AddFormVisible = false"
+                <el-button type="primary" @click="saveProjectInfo"
                     >确 定</el-button
                 >
             </div>
@@ -159,6 +168,7 @@ export default {
                     },
                 ],
             },
+            employees: [], // 人员列表
         };
     },
     methods: {
@@ -189,6 +199,62 @@ export default {
         onSearch() {
             this.$emit("search", this.input);
         },
+        fetchEmployees() {
+            // 请求人员列表
+
+            this.$axios
+                .post(
+                    "http://121.40.126.131:80/luoshi-pms/api/pms/employee/info/selectEmployeeList",
+                    {}
+                )
+                .then((response) => {
+                    this.employees = response.data.body;
+                })
+                .catch((error) => {
+                    console.error("Error fetching employees:", error);
+                });
+        },
+        async saveProjectInfo() {
+            // 发送填写好的表单
+
+            // 构建请求的数据
+            const requestData = {
+                id: this.form.id, // 从 form 数据中获取
+                name: this.form.name,
+                employee_id: this.form.principal,
+                plan_start_date: this.form.planStart,
+                plan_end_date: this.form.planEnd,
+                reality_start_date: this.form.trueStart,
+                reality_end_date: this.form.trueEnd,
+            };
+
+            try {
+                const response = await this.$axios.post(
+                    "http://121.40.126.131:80/luoshi-pms/api/pms/project/editing/saveProjectInfo",
+                    requestData
+                );
+
+                console.log("response", response);
+                if (
+                    response.data.body &&
+                    response.data.header &&
+                    response.data.header.message == "成功"
+                ) {
+                    // 处理成功的逻辑，例如显示一个通知或提示
+                    this.$message.success("项目信息保存成功！");
+                    this.AddFormVisible = false;
+                } else {
+                    // 处理失败的逻辑，例如显示一个错误消息
+                    this.$message.error("项目信息保存失败，请稍后重试。");
+                }
+            } catch (error) {
+                console.error("Error while saving project info:", error);
+                this.$message.error("项目信息保存失败，请检查网络连接。");
+            }
+        },
+    },
+    mounted() {
+        this.fetchEmployees();
     },
 };
 </script>

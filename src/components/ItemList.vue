@@ -32,28 +32,37 @@
                 label="计划开始时间"
                 width="120"
                 align="center"
+                v-slot:default="scope"
             >
+                <span>{{ formatDate(scope.row.planStart) }}</span>
             </el-table-column>
             <el-table-column
                 prop="planEnd"
                 label="计划结束时间"
                 width="120"
                 align="center"
+                v-slot:default="scope"
             >
+                <span>{{ formatDate(scope.row.planEnd) }}</span>
             </el-table-column>
             <el-table-column
                 prop="trueStart"
                 label="实际开始时间"
                 width="120"
                 align="center"
+                v-slot:default="scope"
             >
+                <span>{{ formatDate(scope.row.trueStart) }}</span>
             </el-table-column>
             <el-table-column
                 prop="trueEnd"
                 label="实际结束时间"
                 width="120"
                 align="center"
+                v-slot:default="scope"
             >
+                <span>{{ formatDate(scope.row.trueEnd) }}</span>
+            </el-table-column>
             </el-table-column>
             <el-table-column label="操作" align="center">
                 <template slot-scope="scope">
@@ -92,6 +101,8 @@
                     <el-input
                         v-model="currentRow.name"
                         autocomplete="off"
+                        maxlength="100"
+                        show-word-limit
                     ></el-input>
                 </el-form-item>
                 <el-form-item
@@ -103,8 +114,7 @@
                         v-model="currentRow.principal"
                         placeholder="项目负责人"
                     >
-                        <el-option label="张三" value="张三"></el-option>
-                        <el-option label="李四" value="李四"></el-option>
+                        <el-option v-for="employee in employees" :key="employee.id" :label="employee.name" :value="employee.id"></el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item
@@ -141,6 +151,9 @@
                         placeholder="选择日期"
                     >
                     </el-date-picker>
+                    <div style="color: red; line-height: initial">
+                        *若填写则项目不可删除
+                    </div>
                 </el-form-item>
                 <el-form-item
                     label="实际结束时间"
@@ -184,6 +197,7 @@ export default {
             //     this.pageSize,
             //     newVal
             // );
+            this.currentPage = 0;
             this.fetchProjects(this.currentPage, this.pageSize, newVal);
         },
     },
@@ -231,6 +245,7 @@ export default {
             //     },
             // ],
             tableData: [],
+            employees: [], // 人员列表
             totalInfo: 0, // 总共的信息条数
             ChangeFormVisible: false,
             currentRow: {
@@ -241,6 +256,7 @@ export default {
                 planEnd: "",
                 trueStart: "",
                 trueEnd: "",
+                principal_id: "",
             }, // 存储被选中用于编辑的行
             form: {
                 serial: "",
@@ -250,6 +266,7 @@ export default {
                 planEnd: "",
                 trueStart: "",
                 trueEnd: "",
+                principal_id: "",
             },
             formLabelWidth: "120px",
             rules: {
@@ -287,6 +304,9 @@ export default {
     created() {
         // 当组件创建后，立即获取数据
         this.fetchProjects();
+    },
+    mounted() {
+        this.fetchEmployees();
     },
     methods: {
         deleteItem(row) {
@@ -389,9 +409,13 @@ export default {
             return text.substring(0, maxLength) + "...";
         },
         shouldDisableDelete(trueStartDate) {
-            return new Date() > new Date(trueStartDate);
+            //console.log("trueStartDate", trueStartDate);
+            return trueStartDate === null;
         },
         fetchProjects(pageNum = 1, pageSize = 5, name = "") {
+            if (name == "") {
+                name = this.searchValue;
+            }
             const apiUrl =
                 "http://121.40.126.131:80/luoshi-pms/api/pms//project/editing/queryProjectPage";
 
@@ -426,18 +450,39 @@ export default {
                 name: apiData.name || "",
                 principal: apiData.employeeName || "",
                 planStart: apiData.planStartDate
-                    ? apiData.planStartDate.split(" ")[0]
-                    : "", // 取日期部分
+                    ? new Date(apiData.planStartDate.split(" ")[0])
+                    : null, // 取日期部分
                 planEnd: apiData.planEndDate
-                    ? apiData.planEndDate.split(" ")[0]
-                    : "", // 取日期部分
+                    ? new Date(apiData.planEndDate.split(" ")[0])
+                    : null, // 取日期部分
                 trueStart: apiData.realityStartDate
-                    ? apiData.realityStartDate.split(" ")[0]
-                    : "", // 取日期部分
+                    ? new Date(apiData.realityStartDate.split(" ")[0])
+                    : null, // 取日期部分
                 trueEnd: apiData.realityEndDate
-                    ? apiData.realityEndDate.split(" ")[0]
-                    : "", // 取日期部分
+                    ? new Date(apiData.realityEndDate.split(" ")[0])
+                    : null, // 取日期部分
+                principal_id: apiData.employeeId || "",
             }));
+        },
+        formatDate(date) {
+            if (date) {
+                return date.toISOString().split("T")[0]; // 这将返回 "YYYY-MM-DD" 格式
+            }
+            return "";
+        },
+        fetchEmployees() {
+            // 请求人员列表
+            this.$axios
+                .post(
+                    "http://121.40.126.131:80/luoshi-pms/api/pms/employee/info/selectEmployeeList",
+                    {}
+                )
+                .then((response) => {
+                    this.employees = response.data.body;
+                })
+                .catch((error) => {
+                    console.error("Error fetching employees:", error);
+                });
         },
     },
 };
