@@ -66,10 +66,10 @@
             </el-table-column>
             <el-table-column label="操作" align="center">
                 <template slot-scope="scope">
-                    <el-button type="primary" @click="openEditForm"
+                    <el-button type="primary" @click="openEditForm(scope.row)"
                         >编辑</el-button
                     >
-                    <el-button type="primary" @click="openManageForm">添加人员</el-button>
+                    <el-button type="primary" @click="openManageForm(scope.row)">添加人员</el-button>
                     <el-button
                         type="danger"
                         @click="deleteItem(scope.row)"
@@ -174,82 +174,14 @@
             </div>
         </el-dialog>
 
-        <el-dialog title="项目成员管理" :visible.sync="ManageFormVisible">
-            <div class="margin10-0">
-                <el-row :gutter="10">
-                    <el-col :span="6">
-                        <div class="grid-content">
-                            <el-select
-                                placeholder="项目成员"
-                                v-model="ManagePrincipal"
-                                @change="handleManagePrincipalChange"
-                                >
-                                <el-option
-                                    v-for="employee in employees"
-                                    :key="employee.id"
-                                    :label="employee.name"
-                                    :value="employee.id"
-                                ></el-option>
-                            </el-select>
-                        </div>
-                    </el-col>
-                    <el-col :span="4">
-                        <div class="grid-content"><el-button type="primary">添加成员</el-button></div>
-                    </el-col>
-                </el-row>
-            </div>
-            <div class="block">
-                <el-table
-                    :data="ManageData"
-                    style="width: 100%"
-                    border
-                    @row-click="handleManageRowClick"
-                    row-key="serial"
-                >
-                <el-table-column label="序号" min-width="30" align="center">
-                    <template slot-scope="scope"> {{ scope.$index + 1 }} </template>
-                </el-table-column>
-                <el-table-column
-                    prop="employeeName"
-                    label="项目成员"
-                    min-width="60"
-                    align="center"
-                    v-slot:default="scope"
-                >
-                    <span>{{ truncateText(scope.row.employeeName, 100) }}</span>
-                </el-table-column>
-                <el-table-column
-                    prop="status"
-                    label="状态"
-                    width="120"
-                    align="center"
-                >
-                </el-table-column>
-                <el-table-column label="操作" align="center">
-                    <template slot-scope="scope">
-                        <el-button :type="scope.row.status"
-                            >回归项目</el-button
-                        >
-                    </template>
-                </el-table-column>
-        </el-table>
-            </div>
-            <div slot="footer" class="dialog-footer">
-                <el-button @click="ChangeFormVisible = false">取 消</el-button>
-                <el-button type="primary" @click="updateData">确 定</el-button>
-            </div>
-        </el-dialog>
-        
+        <ManageDialog :ManageFormVisible="ManageFormVisible" @update:ManageFormVisible="ManageFormVisible = $event" :currentProject="currentRow"></ManageDialog>
     </div>
 </template>
 
 <script>
-function toLocalDateString(date) {
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - offset * 60 * 1000);
-    return localDate.toISOString().split("T")[0];
-}
+import ManageDialog from "./ManageDialog.vue";
 export default {
+    components: { ManageDialog },
     props: {
         searchValue: {
             type: String,
@@ -267,12 +199,6 @@ export default {
             // );
             this.currentPage = 0;
             this.fetchProjects(this.currentPage, this.pageSize, newVal);
-        },
-        ManageFormVisible(newVal) {
-            if (newVal) {
-                // 去发送请求
-            }
-            this.ManagePrincipal = null;
         },
     },
     data() {
@@ -374,8 +300,6 @@ export default {
                     },
                 ],
             },
-            ManageData: [],
-            ManagePrincipal: {}, // 项目人员管理的被添加人员
         };
     },
     created() {
@@ -430,32 +354,17 @@ export default {
         handleRowClick(row) {
             this.currentRow = { ...row }; // 深拷贝选中的行
         },
-        handleManageRowClick() {},
-        openEditForm() {
+        openEditForm(row) {
+            this.currentRow = { ...row }; // 深拷贝选中的行
             this.ChangeFormVisible = true;
         },
-        openManageForm() {
+        openManageForm(row) {
+            this.currentRow = { ...row }; // 深拷贝选中的行
             this.ManageFormVisible = true;
         },
         async updateData() {
             // 点击编辑框中的确定来更新按钮
 
-            // 先对 currentRow 进行深拷贝，以避免直接修改响应式数据
-            const updatedRow = this.currentRow;
-
-            // 将 Date 对象转换为字符串
-            // if (updatedRow.trueStart instanceof Date) {
-            //     updatedRow.trueStart = toLocalDateString(updatedRow.trueStart);
-            // }
-            // if (updatedRow.trueEnd instanceof Date) {
-            //     updatedRow.trueEnd = toLocalDateString(updatedRow.trueEnd);
-            // }
-            // if (updatedRow.planStart instanceof Date) {
-            //     updatedRow.planStart = toLocalDateString(updatedRow.planStart);
-            // }
-            // if (updatedRow.planEnd instanceof Date) {
-            //     updatedRow.planEnd = toLocalDateString(updatedRow.planEnd);
-            // }
             // 使用手动循环来查找索引
             let index = -1;
             for (let i = 0; i < this.tableData.length; i++) {
@@ -514,13 +423,11 @@ export default {
         },
         handleSizeChange(pageSize) {
             // 一页数据大小改变
-            // console.log("pageSize", pageSize);
             this.pageSize = pageSize;
             this.fetchProjects(this.currentPage, pageSize);
         },
         handleCurrentChange(new_page) {
             // 具体页数改变
-            // console.log("具体页数改变", new_page, this.currentPage);
             this.currentPage = new_page;
             this.fetchProjects(new_page);
         },
@@ -623,31 +530,6 @@ export default {
             );
             if (selectedEmployee) {
                 this.currentRow.principal_id = selectedEmployee.id;
-            }
-        },
-        handleManagePrincipalChange(newPrincipalName) {
-            const selectedEmployee = this.employees.find(
-                (employee) => employee.name === newPrincipalName
-            );
-            if (selectedEmployee) {
-                this.ManagePrincipal = selectedEmployee.id;
-            }
-        },
-        async fetchMembersNotInProject(projectId) {
-            try {
-                const response = await this.$axios.post(
-                    "http://121.40.126.131:80/luoshi-pms/api/pms/project/personnel/projectMembertList",
-                    {
-                        projectId: projectId,
-                    }
-                );
-
-                if (response && response.data) {
-                    return response.data;
-                }
-            } catch (error) {
-                console.error("Error fetching members not in project:", error);
-                throw error; // 你可以选择抛出错误以进行进一步处理，或者返回一个默认值
             }
         },
     },
