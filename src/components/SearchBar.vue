@@ -18,7 +18,7 @@
         </el-row>
 
         <el-dialog title="新增项目" :visible.sync="AddFormVisible">
-            <el-form :model="form" :rules="rules">
+            <el-form :model="form" :rules="rules" ref="AddFrom">
                 <el-form-item
                     label="项目名称"
                     :label-width="formLabelWidth"
@@ -214,43 +214,68 @@ export default {
                     console.error("Error fetching employees:", error);
                 });
         },
-        async saveProjectInfo() {
-            // 发送填写好的表单
+        saveProjectInfo() {
+            // 首先验证表单
+            this.$refs.AddFrom.validate((valid) => {
+                if (valid) {
+                    // 构建请求的数据
+                    const requestData = {
+                        id: this.form.id,
+                        name: this.form.name,
+                        employee_id: this.form.principal,
+                        plan_start_date: this.form.planStart,
+                        plan_end_date: this.form.planEnd,
+                        reality_start_date: this.form.trueStart,
+                        reality_end_date: this.form.trueEnd,
+                    };
 
-            // 构建请求的数据
-            const requestData = {
-                id: this.form.id, // 从 form 数据中获取
-                name: this.form.name,
-                employee_id: this.form.principal,
-                plan_start_date: this.form.planStart,
-                plan_end_date: this.form.planEnd,
-                reality_start_date: this.form.trueStart,
-                reality_end_date: this.form.trueEnd,
-            };
-
-            try {
-                const response = await this.$axios.post(
-                    "http://121.40.126.131:80/luoshi-pms/api/pms/project/editing/saveProjectInfo",
-                    requestData
-                );
-
-                console.log("response", response);
-                if (
-                    response.data.body &&
-                    response.data.header &&
-                    response.data.header.message == "成功"
-                ) {
-                    // 处理成功的逻辑，例如显示一个通知或提示
-                    this.$message.success("项目信息保存成功！");
-                    this.AddFormVisible = false;
+                    this.$axios
+                        .post(
+                            "http://121.40.126.131:80/luoshi-pms/api/pms/project/editing/saveProjectInfo",
+                            requestData
+                        )
+                        .then((response) => {
+                            if (
+                                response.data.body &&
+                                response.data.header &&
+                                response.data.header.message === "成功"
+                            ) {
+                                this.$message.success("项目信息保存成功！");
+                                // 清空缓存的数据
+                                this.form = {
+                                    serial: "",
+                                    name: "",
+                                    principal: "",
+                                    planStart: new Date(),
+                                    planEnd: new Date(),
+                                    trueStart: new Date(),
+                                    // planStart: null,
+                                    // planEnd: null,
+                                    // trueStart: null,
+                                    trueEnd: "",
+                                };
+                                this.AddFormVisible = false;
+                            } else {
+                                this.$message.error(
+                                    "项目信息保存失败，请稍后重试。"
+                                );
+                            }
+                        })
+                        .catch((error) => {
+                            console.error(
+                                "Error while saving project info:",
+                                error
+                            );
+                            this.$message.error(
+                                "项目信息保存失败，请检查网络连接。"
+                            );
+                        });
                 } else {
-                    // 处理失败的逻辑，例如显示一个错误消息
-                    this.$message.error("项目信息保存失败，请稍后重试。");
+                    this.$message.error(
+                        "请确保已填写所有必填项并满足所有验证规则!"
+                    );
                 }
-            } catch (error) {
-                console.error("Error while saving project info:", error);
-                this.$message.error("项目信息保存失败，请检查网络连接。");
-            }
+            });
         },
     },
     mounted() {

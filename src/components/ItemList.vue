@@ -92,7 +92,7 @@
         </el-pagination>
 
         <el-dialog title="编辑项目" :visible.sync="ChangeFormVisible">
-            <el-form :model="currentRow" :rules="rules">
+            <el-form :model="currentRow" :rules="rules" ref="ChangeForm">
                 <el-form-item
                     label="项目名称"
                     :label-width="formLabelWidth"
@@ -362,61 +362,65 @@ export default {
             this.currentRow = { ...row }; // 深拷贝选中的行
             this.ManageFormVisible = true;
         },
-        async updateData() {
-            // 点击编辑框中的确定来更新按钮
-
-            // 使用手动循环来查找索引
-            let index = -1;
-            for (let i = 0; i < this.tableData.length; i++) {
-                if (
-                    String(this.tableData[i].serial) ===
-                    String(this.currentRow.serial)
-                ) {
-                    index = i;
-                    break;
-                }
-            }
+        updateData() {
+            // 使用 findIndex 来查找索引
+            const index = this.tableData.findIndex(
+                (item) => String(item.serial) === String(this.currentRow.serial)
+            );
 
             if (index !== -1) {
-                // 接下来提交数据
+                this.$refs.ChangeForm.validate((valid) => {
+                    if (valid) {
+                        // 构建请求的数据
+                        const requestData = {
+                            id: this.currentRow.serial,
+                            name: this.currentRow.name,
+                            employee_id: this.currentRow.principal_id,
+                            plan_start_date: this.currentRow.planStart,
+                            plan_end_date: this.currentRow.planEnd,
+                            reality_start_date: this.currentRow.trueStart,
+                            reality_end_date: this.currentRow.trueEnd,
+                        };
 
-                // 构建请求的数据
-                const requestData = {
-                    id: this.currentRow.serial, // 从 currentRow 数据中获取
-                    name: this.currentRow.name,
-                    employee_id: this.currentRow.principal_id,
-                    plan_start_date: this.currentRow.planStart,
-                    plan_end_date: this.currentRow.planEnd,
-                    reality_start_date: this.currentRow.trueStart,
-                    reality_end_date: this.currentRow.trueEnd,
-                };
-                console.log("requestData", requestData);
-
-                try {
-                    const response = await this.$axios.post(
-                        "http://121.40.126.131:80/luoshi-pms/api/pms/project/editing/saveProjectInfo",
-                        requestData
-                    );
-
-                    console.log("response", response);
-                    if (
-                        response.data.body &&
-                        response.data.header &&
-                        response.data.header.message == "成功"
-                    ) {
-                        // 处理成功的逻辑，例如显示一个通知或提示
-                        this.$message.success("项目信息编辑成功！");
-                        // 修改本地的数据
-                        this.tableData.splice(index, 1, this.currentRow);
-                        this.ChangeFormVisible = false;
+                        this.$axios
+                            .post(
+                                "http://121.40.126.131:80/luoshi-pms/api/pms/project/editing/saveProjectInfo",
+                                requestData
+                            )
+                            .then((response) => {
+                                if (
+                                    response.data.body &&
+                                    response.data.header &&
+                                    response.data.header.message === "成功"
+                                ) {
+                                    this.$message.success("项目信息编辑成功！");
+                                    this.tableData.splice(
+                                        index,
+                                        1,
+                                        this.currentRow
+                                    );
+                                    this.ChangeFormVisible = false;
+                                } else {
+                                    this.$message.error(
+                                        "项目信息编辑失败，请稍后重试。"
+                                    );
+                                }
+                            })
+                            .catch((error) => {
+                                console.error(
+                                    "Error while saving project info:",
+                                    error
+                                );
+                                this.$message.error(
+                                    "项目信息编辑失败，请检查网络连接。"
+                                );
+                            });
                     } else {
-                        // 处理失败的逻辑，例如显示一个错误消息
-                        this.$message.error("项目信息编辑失败，请稍后重试。");
+                        this.$message.error(
+                            "请确保已填写所有必填项并满足所有验证规则!"
+                        );
                     }
-                } catch (error) {
-                    console.error("Error while saving project info:", error);
-                    this.$message.error("项目信息编辑失败，请检查网络连接。");
-                }
+                });
             } else {
                 this.ChangeFormVisible = false;
             }
@@ -424,7 +428,8 @@ export default {
         handleSizeChange(pageSize) {
             // 一页数据大小改变
             this.pageSize = pageSize;
-            this.fetchProjects(this.currentPage, pageSize);
+            this.currentPage = 1;
+            this.fetchProjects(0, pageSize);
         },
         handleCurrentChange(new_page) {
             // 具体页数改变

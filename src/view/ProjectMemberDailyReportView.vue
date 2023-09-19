@@ -1,8 +1,8 @@
 <template>
     <div>
         <el-row id="topBar">
-            <el-button type="primary">填写日报</el-button
-            ><el-button type="primary">刷新</el-button>
+            <el-button type="primary" @click="writeDaily">填写日报</el-button
+            ><el-button type="primary" @click="reload">刷新</el-button>
         </el-row>
         <div class="block">
             <el-table
@@ -101,7 +101,8 @@
         </el-pagination>
         </div>
 
-        <DailyDialog></DailyDialog>
+        <DailyDialog title="填写日报" :DailyFormVisible="DailyFormVisible" @update:DailyFormVisible="DailyFormVisible = $event" :DailyData="DailyData" @save="handleSaveOnCreate"></DailyDialog>
+        <DailyDialog title="编辑日报" :DailyFormVisible="ChangeDailyFormVisible" @update:DailyFormVisible="ChangeDailyFormVisible = $event" :DailyData="DailyData" @save="handleSaveOnUpdate"></DailyDialog>
     </div>
 </template>
 
@@ -118,7 +119,10 @@ export default {
             tableData: [],
             pageSize: 5,
             totalInfo: 0,
-            currentPage: 1,
+            currentPage: 1, // 页码
+            DailyFormVisible: false,
+            ChangeDailyFormVisible: false,
+            DailyData: {},
         };
     },
     created() {
@@ -129,7 +133,8 @@ export default {
         handleSizeChange(pageSize) {
             // 一页数据大小改变
             this.pageSize = pageSize;
-            this.fetchProjects(this.currentPage, pageSize);
+            this.currentPage = 1;
+            this.fetchProjects(0, pageSize);
         },
         handleCurrentChange(new_page) {
             // 具体页数改变
@@ -141,7 +146,7 @@ export default {
                 pageSize = this.pageSize;
             }
             if (pageNum == 1) {
-                pageNum = this.pageNum;
+                pageNum = this.currentPage;
             }
             const apiUrl =
                 "http://121.40.126.131:80/luoshi-pms/api/pms/daily/report/tasks/dailyReportSelect";
@@ -154,9 +159,6 @@ export default {
                     pageSize: pageSize,
                 })
                 .then((response) => {
-                    console.log("response.data", response.data);
-                    // console.log(response.data.body.content);
-                    //projects = response.data; // 假设 API 返回的数据是一个数组，你可能需要根据实际的数据结构进行调整
                     if (response.data.body) {
                         this.totalInfo = response.data.body.total || 0;
                         this.tableData = response.data.body.content || [];
@@ -168,6 +170,146 @@ export default {
                 .finally(() => {
                     this.loading = false;
                 });
+        },
+        openEditForm(row) {
+            this.DailyData = row;
+            this.ChangeDailyFormVisible = true;
+        },
+        writeDaily() {
+            this.DailyData = {};
+            this.DailyFormVisible = true;
+        },
+        handleSaveOnCreate(inputData, callback) {
+            // 检查 inputData.reporterDate 是否存在和有效
+            let formattedDate = "";
+            if (inputData.reportDate && inputData.reportDate instanceof Date) {
+                formattedDate = this.formatDate(inputData.reportDate);
+            } else {
+                console.warn(
+                    "reporterDate is not a valid Date object:",
+                    inputData.reporterDate
+                );
+                // 可能还需要采取其他的错误处理策略
+            }
+
+            // 构建请求的数据
+            const requestData = {
+                employeeId: "1703757328743800833", // TODO:这里写死了是我的，接下来要修改
+                status: 0,
+                projectId: inputData.projectId,
+                reportDateStr: formattedDate,
+                place: inputData.place,
+                reality: inputData.reality,
+                regularTime: inputData.regularTime,
+                overtime: inputData.overtime,
+                tomorrowPlan: inputData.tomorrowPlan,
+                taskTimePlan: inputData.taskTimePlan,
+            };
+
+            this.$axios
+                .post(
+                    "http://121.40.126.131:80/luoshi-pms/api/pms/daily/report/tasks/addDailyReport",
+                    requestData
+                )
+                .then((response) => {
+                    if (
+                        response.data.body &&
+                        response.data.header &&
+                        response.data.header.message === "成功"
+                    ) {
+                        this.$message.success("日报信息保存成功！");
+                        // 清空缓存的数据
+                        this.form = {
+                            serial: "",
+                            name: "",
+                            principal: "",
+                            planStart: new Date(),
+                            planEnd: new Date(),
+                            trueStart: new Date(),
+                            // planStart: null,
+                            // planEnd: null,
+                            // trueStart: null,
+                            trueEnd: "",
+                        };
+                        this.DailyFormVisible = false;
+                        this.reload();
+                        if (callback && typeof callback === "function") {
+                            callback();
+                        }
+                    } else {
+                        this.$message.error("日报信息保存失败，请稍后重试。");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error while saving project info:", error);
+                    this.$message.error("日报信息保存失败，请检查网络连接。");
+                });
+        },
+        handleSaveOnUpdate(inputData, callback) {
+            console.log("inputData", inputData);
+            // 检查 inputData.reporterDate 是否存在和有效
+            let formattedDate = "";
+            if (inputData.reportDate && inputData.reportDate instanceof Date) {
+                formattedDate = this.formatDate(inputData.reportDate);
+            } else {
+                console.warn(
+                    "reporterDate is not a valid Date object:",
+                    inputData.reporterDate
+                );
+                // 可能还需要采取其他的错误处理策略
+            }
+
+            // 构建请求的数据
+            const requestData = {
+                id: inputData.id,
+                employeeId: "1703757328743800833", // TODO:这里写死了是我的，接下来要修改
+                status: 0,
+                projectId: inputData.projectId,
+                reportDateStr: formattedDate,
+                place: inputData.place,
+                reality: inputData.reality,
+                regularTime: inputData.regularTime,
+                overtime: inputData.overtime,
+                tomorrowPlan: inputData.tomorrowPlan,
+                taskTimePlan: inputData.taskTimePlan,
+            };
+
+            this.$axios
+                .post(
+                    "http://121.40.126.131:80/luoshi-pms/api/pms/daily/report/tasks/addDailyReport",
+                    requestData
+                )
+                .then((response) => {
+                    if (
+                        response.data.body &&
+                        response.data.header &&
+                        response.data.header.message === "成功"
+                    ) {
+                        this.$message.success("日报信息修改成功！");
+                        // 清空缓存的数据
+
+                        this.ChangeDailyFormVisible = false;
+                        this.reload();
+                        if (callback && typeof callback === "function") {
+                            callback();
+                        }
+                    } else {
+                        this.$message.error("日报信息修改失败，请稍后重试。");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error while saving project info:", error);
+                    this.$message.error("日报信息修改失败，请检查网络连接。");
+                });
+        },
+        formatDate(dateObj) {
+            let year = dateObj.getFullYear();
+            let month = (dateObj.getMonth() + 1).toString().padStart(2, "0"); // padStart 保证了月份是两位数
+            let day = dateObj.getDate().toString().padStart(2, "0"); // 同样，padStart 保证了日期是两位数
+            return `${year}-${month}-${day}`;
+        },
+        reload() {
+            this.fetchProjects();
         },
     },
 };

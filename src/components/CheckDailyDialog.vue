@@ -1,10 +1,5 @@
 <template>
-    <el-dialog
-        :title="title"
-        :visible.sync="localDailyFormVisible"
-        width="60%"
-        @close="clearSelect"
-    >
+    <el-dialog :title="title" :visible.sync="localDailyFormVisible" width="60%">
         <div class="block">
             <el-form
                 label-position="top"
@@ -19,6 +14,7 @@
                                 type="date"
                                 placeholder="请选择日期"
                                 v-model="localDailyData.reportDate"
+                                disabled
                             >
                             </el-date-picker>
                         </el-form-item>
@@ -27,16 +23,10 @@
                         <el-form-item label="项目名称" prop="projectId">
                             <el-select
                                 placeholder="项目名称"
-                                @change="handleDailyProjectNameChange"
                                 ref="DailyProjectNameComponent"
-                                v-model="localDailyData.projectId"
+                                v-model="localDailyData.projectName"
+                                disabled
                             >
-                                <el-option
-                                    v-for="project in Projects"
-                                    :key="project.id"
-                                    :label="project.name"
-                                    :value="project.id"
-                                ></el-option>
                             </el-select>
                         </el-form-item>
                     </el-col>
@@ -46,6 +36,7 @@
                                 prop="subProject"
                                 placeholder="请输入子项目"
                                 v-model="localDailyData.subProject"
+                                disabled
                             ></el-input>
                         </el-form-item>
                     </el-col>
@@ -54,14 +45,9 @@
                             <el-select
                                 placeholder="请选择"
                                 @change="handleDailyPlaceChange"
-                                v-model="localDailyData.place"
+                                v-model="localDailyData.placeName"
+                                disabled
                             >
-                                <el-option
-                                    v-for="place in Places"
-                                    :key="place.dictKey"
-                                    :label="place.dictValue"
-                                    :value="place.dictKey"
-                                ></el-option>
                             </el-select>
                         </el-form-item>
                     </el-col>
@@ -75,6 +61,7 @@
                                 placeholder="请输入今日内容"
                                 v-model="localDailyData.reality"
                                 maxlength="100"
+                                disabled
                             >
                             </el-input>
                         </el-form-item>
@@ -87,6 +74,7 @@
                                 placeholder="请输入明日计划"
                                 v-model="localDailyData.tomorrowPlan"
                                 maxlength="100"
+                                disabled
                             >
                             </el-input>
                         </el-form-item>
@@ -99,6 +87,7 @@
                                 type="number"
                                 placeholder="请输入计划工时/h"
                                 v-model="localDailyData.taskTimePlan"
+                                disabled
                             >
                             </el-input>
                         </el-form-item>
@@ -109,6 +98,7 @@
                                 type="number"
                                 placeholder="正常工作工时/h"
                                 v-model="localDailyData.regularTime"
+                                disabled
                             >
                             </el-input>
                         </el-form-item>
@@ -119,6 +109,7 @@
                                 type="number"
                                 placeholder="加班工作时长/h"
                                 v-model="localDailyData.overtime"
+                                disabled
                             >
                             </el-input>
                         </el-form-item>
@@ -128,7 +119,6 @@
         </div>
         <div slot="footer" class="dialog-footer">
             <el-button @click="localDailyFormVisible = false">取 消</el-button>
-            <el-button @click="save" type="primary">保存</el-button>
         </div>
     </el-dialog>
 </template>
@@ -168,17 +158,6 @@ export default {
                 this.$emit("update:DailyFormVisible", newVal);
             }
         },
-
-        // DailyData(newVal) {
-        //     this.localDailyData = {
-        //         ...this.DailyData,
-        //         reportDate: (() => {
-        //             return this.DailyData.reportDateStr
-        //                 ? new Date(this.DailyData.reportDateStr)
-        //                 : null;
-        //         })(), // 使用一个立即执行的匿名函数来设置reportDate
-        //     }; // 当DailyData变化时更新localDailyData
-        // },
     },
     data() {
         return {
@@ -270,63 +249,6 @@ export default {
         clearSelect() {},
         handleDailyProjectNameChange() {},
         handleDailyPlaceChange() {},
-        fetchProjects() {
-            // 请求项目列表
-
-            this.$axios
-                .post(
-                    "http://121.40.126.131:80/luoshi-pms/api/pms//project/editing/selectProjectList",
-                    {}
-                )
-                .then((response) => {
-                    this.Projects = response.data.body;
-                })
-                .catch((error) => {
-                    console.error("Error fetching employees:", error);
-                });
-        },
-        fetchPlaces() {
-            // 请求地点列表
-
-            this.$axios
-                .post(
-                    "http://121.40.126.131:80/luoshi-pms/api/pms//config/basedict/internalList",
-                    { code: "dailyreportplace" }
-                )
-                .then((response) => {
-                    this.Places = response.data.body;
-                })
-                .catch((error) => {
-                    console.error("Error fetching employees:", error);
-                });
-        },
-        save() {
-            // 使用 validate 方法进行表单验证
-            this.$refs.dailyForm.validate((valid) => {
-                if (valid) {
-                    console.log("this.Projects", this.Projects);
-                    // 当所有验证规则都通过时，发出 save 事件
-                    this.$emit(
-                        "save",
-                        {
-                            ...this.localDailyData,
-                            projectId: this.localDailyData.projectId,
-                        },
-                        () => {}
-                    );
-                } else {
-                    // 当有至少一个验证规则不通过时，显示提示信息
-                    this.$message.error(
-                        "请确保已填写所有必填项并满足所有验证规则！"
-                    );
-                    return false;
-                }
-            });
-        },
-    },
-    mounted() {
-        this.fetchProjects();
-        this.fetchPlaces();
     },
 };
 </script>
