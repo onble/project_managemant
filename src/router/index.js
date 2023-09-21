@@ -1,6 +1,7 @@
 //1.导入vue和router包
 import Vue from "vue";
 import VueRouter from "vue-router";
+import store from "../store/index"; // 修改为你的 store 文件路径
 
 //导入需要的组件
 import AdminDailyReportView from "../view/AdminDailyReportView";
@@ -24,6 +25,7 @@ const router = new VueRouter({
         {
             path: "/ProjectMemberDailyReport",
             component: ProjectMemberDailyReportView,
+            meta: { requiresAuth: true },
         },
         {
             path: "/Home",
@@ -35,6 +37,28 @@ const router = new VueRouter({
         },
     ],
 });
+
+// router.beforeEach((to, from, next) => {
+//     if (to.matched.some((record) => record.meta.requiresAuth)) {
+//         let loggedInEmployee = localStorage.getItem("loggedInEmployee");
+//         if (!loggedInEmployee) {
+//             if (to.path !== "/Login") {
+//                 // 添加这个条件来检查当前路由
+//                 store.dispatch("setActiveIndex", "/Login");
+//                 next({
+//                     path: "/Login",
+//                     query: { redirect: to.fullPath },
+//                 });
+//             } else {
+//                 next();
+//             }
+//         } else {
+//             next();
+//         }
+//     } else {
+//         next();
+//     }
+// });
 
 //4.向外共享路由示例对象
 export default router;

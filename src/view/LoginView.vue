@@ -1,6 +1,6 @@
 <template>
     <div class="login-container">
-        <div class="login-box">
+        <div class="login-box" v-if="!loggedInEmployee">
             <h1 class="login-title">欢迎登录</h1>
             <el-form
                 ref="loginForm"
@@ -13,6 +13,7 @@
                         placeholder="登录账户"
                         v-model="loginForm.employeeId"
                         clearable
+                        filterable
                         style="width: 100%"
                     >
                         <el-option
@@ -35,6 +36,14 @@
                     >Login</el-button
                 >
             </el-form>
+        </div>
+        <!-- 退出页面 -->
+        <div v-else>
+            <h1 class="login-title">欢迎，{{ loggedInEmployee.name }}</h1>
+            <p>您已成功登录。如需更改用户，请点击下方按钮退出登录。</p>
+            <el-button type="danger" class="logout-btn" @click="handleLogout"
+                >退出登录</el-button
+            >
         </div>
     </div>
 </template>
@@ -66,6 +75,12 @@ export default {
             Employees: [],
         };
     },
+    computed: {
+        loggedInEmployee() {
+            const employeeData = localStorage.getItem("loggedInEmployee");
+            return employeeData ? JSON.parse(employeeData) : null;
+        },
+    },
     methods: {
         handleLogin() {
             this.$refs.loginForm.validate((valid) => {
@@ -77,6 +92,7 @@ export default {
                 }
             });
         },
+
         fetchEmployees() {
             // 请求人员列表
 
@@ -99,6 +115,10 @@ export default {
                     "loggedInEmployee",
                     JSON.stringify({ employeeId: "", name: "管理员" })
                 );
+                this.$store.commit("SET_LOGGED_IN_USER", {
+                    employeeId: "",
+                    name: "管理员",
+                });
                 this.$store.dispatch("setActiveIndex", "/Home");
                 this.$router.push("/Home");
                 return;
@@ -113,6 +133,7 @@ export default {
                     this.loginForm.password === "123456"
                 ) {
                     this.$message.success("Login successful!");
+                    this.$store.commit("SET_LOGGED_IN_USER", matchedEmployee);
                     localStorage.setItem(
                         "loggedInEmployee",
                         JSON.stringify(matchedEmployee)
@@ -126,6 +147,16 @@ export default {
             } else {
                 this.$message.error("User not found!");
                 // TODO: 提示用户用户不存在
+            }
+        },
+        handleLogout() {
+            localStorage.removeItem("loggedInEmployee");
+            this.$store.commit("SET_LOGGED_IN_USER", null);
+            if (this.$route.path === "/Login") {
+                // 刷新当前路由
+                this.$router.go(0);
+            } else {
+                this.$router.push("/Login");
             }
         },
     },
@@ -160,5 +191,10 @@ export default {
 
 .login-btn {
     width: 100%;
+}
+
+.logout-btn {
+    width: 100%;
+    margin-top: 20px;
 }
 </style>

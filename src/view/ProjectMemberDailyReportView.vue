@@ -322,7 +322,19 @@ export default {
                 this.login_employee = loggedInEmployee;
                 // 之后，你可以在这里进行其他的验证和操作
             } else {
-                this.login_employee = { employeeId: "", name: "管理员" };
+                // this.login_employee = { employeeId: "", name: "管理员" };
+                // this.$store.commit("SET_LOGGED_IN_USER", {
+                //     employeeId: "",
+                //     name: "管理员",
+                // });
+                // this.$store.dispatch("setActiveIndex", "/Login");
+                // this.$router.push("/Login");
+                // if (this.$route.path !== "/Login") {
+                //     this.$router.push("/Login");
+                // } else {
+                //     this.$router.go(0); // 刷新当前路由
+                // }
+                console.log("here!!"); //TODO:如何实现路由保护
             }
         },
     },

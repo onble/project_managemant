@@ -12,6 +12,7 @@
                             <el-select
                                 placeholder="员工姓名"
                                 v-model="SearchData.employeeId"
+                                filterable
                                 clearable
                             >
                                 <el-option
@@ -29,6 +30,7 @@
                                 placeholder="项目名称"
                                 v-model="SearchData.projectId"
                                 clearable
+                                filterable
                             >
                                 <el-option
                                     v-for="project in Projects"
@@ -56,6 +58,7 @@
                                 placeholder="请选择"
                                 v-model="SearchData.place"
                                 clearable
+                                filterable
                             >
                                 <el-option
                                     v-for="place in Places"

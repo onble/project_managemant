@@ -14,6 +14,8 @@
                             v-model="ManagePrincipal"
                             @change="handleManagePrincipalChange"
                             ref="selectComponent"
+                            filterable
+                            clearable
                         >
                             <el-option
                                 v-for="employee in employeesNotInProject"

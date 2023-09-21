@@ -30,6 +30,8 @@
                                 @change="handleDailyProjectNameChange"
                                 ref="DailyProjectNameComponent"
                                 v-model="localDailyData.projectId"
+                                filterable
+                                clearable
                             >
                                 <el-option
                                     v-for="project in Projects"
@@ -55,6 +57,8 @@
                                 placeholder="请选择"
                                 @change="handleDailyPlaceChange"
                                 v-model="localDailyData.place"
+                                filterable
+                                clearable
                             >
                                 <el-option
                                     v-for="place in Places"

@@ -23,7 +23,21 @@
                 >
                     管理员查看日报
                 </el-menu-item>
+                <el-tooltip
+                    v-if="loginLabel === '登录'"
+                    content="请先登录"
+                    placement="top"
+                >
+                    <el-menu-item
+                        index="/ProjectMemberDailyReport"
+                        @click="navigateTo('/ProjectMemberDailyReport')"
+                        :disabled="loginLabel === '登录'"
+                    >
+                        项目人员日报
+                    </el-menu-item>
+                </el-tooltip>
                 <el-menu-item
+                    v-else
                     index="/ProjectMemberDailyReport"
                     @click="navigateTo('/ProjectMemberDailyReport')"
                 >
@@ -31,7 +45,7 @@
                 </el-menu-item>
             </el-submenu>
             <el-menu-item index="/Login" @click="navigateTo('/Login')">
-                登录
+                {{ loginLabel }}
             </el-menu-item>
         </el-menu>
         <div class="line"></div>
@@ -40,6 +54,8 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 export default {
     computed: {
         activeIndex: {
@@ -49,6 +65,12 @@ export default {
             set(value) {
                 this.$store.dispatch("setActiveIndex", value);
             },
+        },
+        ...mapState(["loggedInUser"]),
+        loginLabel() {
+            return this.loggedInUser && this.loggedInUser.name !== ""
+                ? this.loggedInUser.name
+                : "登录";
         },
     },
     data() {
@@ -70,6 +92,9 @@ export default {
             if (this.$route.path !== route) {
                 this.$router.push(route);
             }
+        },
+        showLoginAlert() {
+            this.$message.error("请先登录！");
         },
     },
 };

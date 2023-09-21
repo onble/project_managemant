@@ -114,6 +114,8 @@
                         v-model="currentRow.principal"
                         placeholder="项目负责人"
                         @change="handlePrincipalChange"
+                        filterable
+                        clearable
                     >
                         <el-option v-for="employee in employees" :key="employee.id" :label="employee.name" :value="employee.name"></el-option>
                     </el-select>
