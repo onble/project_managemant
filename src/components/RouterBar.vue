@@ -6,12 +6,12 @@
             mode="horizontal"
             @select="handleSelect"
         >
-            <el-menu-item index="/Home" @click="$router.push('/Home')">
+            <el-menu-item index="/Home" @click="navigateTo('/Home')">
                 首页
             </el-menu-item>
             <el-menu-item
                 index="/ProjectManage"
-                @click="$router.push('/ProjectManage')"
+                @click="navigateTo('/ProjectManage')"
             >
                 项目管理
             </el-menu-item>
@@ -19,17 +19,20 @@
                 <template slot="title">我的工作台</template>
                 <el-menu-item
                     index="/AdminDailyReport"
-                    @click="$router.push('/AdminDailyReport')"
+                    @click="navigateTo('/AdminDailyReport')"
                 >
                     管理员查看日报
                 </el-menu-item>
                 <el-menu-item
                     index="/ProjectMemberDailyReport"
-                    @click="$router.push('/ProjectMemberDailyReport')"
+                    @click="navigateTo('/ProjectMemberDailyReport')"
                 >
                     项目人员日报
                 </el-menu-item>
             </el-submenu>
+            <el-menu-item index="/Login" @click="navigateTo('/Login')">
+                登录
+            </el-menu-item>
         </el-menu>
         <div class="line"></div>
         <router-view></router-view>
@@ -38,9 +41,18 @@
 
 <script>
 export default {
+    computed: {
+        activeIndex: {
+            get() {
+                return this.$store.state.activeIndex;
+            },
+            set(value) {
+                this.$store.dispatch("setActiveIndex", value);
+            },
+        },
+    },
     data() {
         return {
-            activeIndex: "/Home",
             activeIndex2: "1",
         };
     },
@@ -52,7 +64,12 @@ export default {
     },
     methods: {
         handleSelect(key, keyPath) {
-            console.log(key, keyPath);
+            // console.log(key, keyPath);
+        },
+        navigateTo(route) {
+            if (this.$route.path !== route) {
+                this.$router.push(route);
+            }
         },
     },
 };

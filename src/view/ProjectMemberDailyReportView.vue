@@ -123,12 +123,15 @@ export default {
             DailyFormVisible: false,
             ChangeDailyFormVisible: false,
             DailyData: {},
+            login_employee: {}, // 登录的员工
         };
     },
     created() {
+        this.checkLoggedInEmployee();
         // 当组件创建后，立即获取数据
         this.fetchProjects();
     },
+    mounted() {},
     methods: {
         handleSizeChange(pageSize) {
             // 一页数据大小改变
@@ -141,7 +144,7 @@ export default {
             this.currentPage = new_page;
             this.fetchProjects(new_page);
         },
-        fetchProjects(pageNum = 1, pageSize = 5, employeeId = "") {
+        fetchProjects(pageNum = 1, pageSize = 5) {
             if (pageSize == 5) {
                 pageSize = this.pageSize;
             }
@@ -154,7 +157,7 @@ export default {
             this.loading = true;
             this.$axios
                 .post(apiUrl, {
-                    employeeId: employeeId,
+                    employeeId: this.login_employee.id,
                     pageNum: pageNum,
                     pageSize: pageSize,
                 })
@@ -310,6 +313,17 @@ export default {
         },
         reload() {
             this.fetchProjects();
+        },
+        checkLoggedInEmployee() {
+            let loggedInEmployee = localStorage.getItem("loggedInEmployee");
+            if (loggedInEmployee) {
+                loggedInEmployee = JSON.parse(loggedInEmployee);
+                // console.log(loggedInEmployee);
+                this.login_employee = loggedInEmployee;
+                // 之后，你可以在这里进行其他的验证和操作
+            } else {
+                this.login_employee = { employeeId: "", name: "管理员" };
+            }
         },
     },
 };

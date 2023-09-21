@@ -7,6 +7,7 @@ import AdminDailyReportView from "../view/AdminDailyReportView";
 import ProjectManageView from "../view/ProjectManageView";
 import ProjectMemberDailyReportView from "../view/ProjectMemberDailyReportView";
 import HomeView from "../view/HomeView";
+import LoginView from "../view/LoginView";
 
 //2.调用Vue.use()函数，把 VueRouter 安装为 Vue 的插件
 Vue.use(VueRouter);
@@ -27,6 +28,10 @@ const router = new VueRouter({
         {
             path: "/Home",
             component: HomeView,
+        },
+        {
+            path: "/Login",
+            component: LoginView,
         },
     ],
 });

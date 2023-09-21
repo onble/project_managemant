@@ -12,6 +12,7 @@ import axios from "axios";
 import ElementUI from "element-ui";
 // 引入ElementUI全部样式
 import "element-ui/lib/theme-chalk/index.css";
+import store from "./store/index";
 
 // 按需引入
 //import { Button, Row, DatePicker } from "element-ui";
@@ -32,4 +33,5 @@ new Vue({
     el: "#app",
     render: (h) => h(App),
     router: router, // 注册路由
+    store, // 使用vuex
 });
