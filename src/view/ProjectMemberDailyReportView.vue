@@ -108,10 +108,21 @@
 
 <script>
 import DailyDialog from "../components/DailyDialog.vue";
-
+import { mapState } from "vuex";
 export default {
     components: {
         DailyDialog,
+    },
+    computed: {
+        ...mapState(["loggedInUser"]),
+        id() {
+            console.log("this.loggedInUser", this.loggedInUser);
+            return this.loggedInUser &&
+                this.loggedInUser.id &&
+                this.loggedInUser.id !== ""
+                ? this.loggedInUser.id
+                : "1703757328743800833";
+        },
     },
     data() {
         return {
@@ -194,10 +205,16 @@ export default {
                 );
                 // 可能还需要采取其他的错误处理策略
             }
-
+            let id = this.id;
+            // console.log("this.loggedInUser", this.loggedInUser);
+            // if (this.loggedInUser) {
+            //     if (this.loggedInUser.id) {
+            //         id = this.loggedInUser.id;
+            //     }
+            // }
             // 构建请求的数据
             const requestData = {
-                employeeId: "1703757328743800833", // TODO:这里写死了是我的，接下来要修改
+                employeeId: id, // TODO:这里写死了是我的，接下来要修改
                 status: 0,
                 projectId: inputData.projectId,
                 reportDateStr: formattedDate,
